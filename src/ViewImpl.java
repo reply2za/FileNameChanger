@@ -156,7 +156,6 @@ public class ViewImpl extends JFrame {
     try {
       System.setProperty("apple.awt.fileDialogForDirectories", "true");
     } catch (Exception e) {
-      e.printStackTrace();
       fileDialog.setTitle("Select a directory only - NOT A FILE");
     }
     fileDialog.setVisible(true);
