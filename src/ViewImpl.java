@@ -97,13 +97,21 @@ public class ViewImpl extends JFrame {
       extensionLabel.setText("Extension: " + extensionTextField.getText());
     });
     commitButton.addActionListener(e -> {
-      if (extensionTextField.getText().isBlank() || cutoff < 1 || directoryNameLabel
+      if (cutoff < 1 || directoryNameLabel
           .getText().equals("Directory: none selected")) {
         commitLabel.setText("Please ensure that all values are set");
         commitLabel.setForeground(new Color(180, 70, 70));
         this.setSize(mainPanel.getPreferredSize().width + 20,
             mainPanel.getPreferredSize().height + 20);
         return;
+      }
+      int num;
+      if (extensionTextField.getText().isBlank()) {
+        num = JOptionPane
+            .showConfirmDialog(this, "Are you sure you want to leave the extension field blank?");
+      if (num != 0) {
+        return;
+      }
       }
       ModelImpl m = new ModelImpl();
       m.performChange(directoryPathSelected, keywordTextField.getText(), cutoff,
