@@ -5,7 +5,6 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -31,7 +30,6 @@ public class ViewImpl extends JFrame {
   private JTextField extensionTextField;
   private JLabel extensionLabel;
   private JLabel commitLabel;
-  private JFileChooser fileChooser;
   private JButton logButton;
   private String directoryPathSelected;
 
