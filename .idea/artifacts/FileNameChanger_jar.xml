@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="FileNameChanger:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/FileNameChanger_jar</output-path>
+    <root id="archive" name="FileNameChanger.jar">
+      <element id="module-output" name="FileNameChanger" />
+    </root>
+  </artifact>
+</component>
