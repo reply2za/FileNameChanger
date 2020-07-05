@@ -145,39 +145,6 @@ public class ViewImpl extends JFrame {
   }
 
   /**
-   * The UI to choose a file (depreciated).
-   */
-  public void chooseDirectory() {
-    commitLabel.setForeground(Color.BLACK);
-    commitLabel.setText("Make changes:");
-    fileChooser = new JFileChooser();
-    fileChooser.setDialogTitle("Choose a directory");
-    fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-    fileChooser.setAcceptAllFileFilterUsed(false);
-    if (new File("/Users").exists()) {
-      fileChooser.setCurrentDirectory(new File("/Users"));
-    } else {
-      fileChooser.setCurrentDirectory(new File("."));
-    }
-    if (fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-      directoryNameLabel.setText("Directory: " + fileChooser.getSelectedFile().toString());
-      String[] directoryContents = fileChooser.getSelectedFile().list();
-      StringBuilder sb = new StringBuilder("Contents of the directory selected:\n");
-      if (directoryContents != null) {
-        for (String s : directoryContents) {
-          sb.append(s).append("\n");
-        }
-        logTextArea.setText(sb.toString());
-      } else {
-        sb.append("(empty)");
-        logTextArea.setText(sb.toString());
-      }
-      this.directoryPathSelected = fileChooser.getSelectedFile().toString();
-      this.setSize(this.getPreferredSize().width + 20, this.getPreferredSize().height + 20);
-    }
-  }
-
-  /**
    * The UI to choose a file.
    */
   public void chooseDirectoryFileDialog() {
