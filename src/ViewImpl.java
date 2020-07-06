@@ -71,9 +71,12 @@ public class ViewImpl extends JFrame {
    * Initializes the action listeners.
    */
   private void initializeActionListeners() {
-    keywordLabel.setToolTipText("The keyword that each file must contain to perform the change");
-    cutoffLabel.setToolTipText("The number of characters to remove from the end of each file");
-    extensionLabel.setToolTipText("Optional: Apply a new extension to all of the renamed files");
+    keywordLabel.setToolTipText(
+        "The keyword (case-sensitive) that a file must contain to perform the change");
+    cutoffLabel.setToolTipText(
+        "The number of characters to remove from the end of each file, does not include extension");
+    extensionLabel.setToolTipText(
+        "Optional unless cutoff is 0: Apply a new extension to all of the renamed files");
     selectDirectoryButton.addActionListener(e -> chooseDirectoryFileDialog());
     keywordTextField.addActionListener(e -> {
       if (!commitLabel.getText().contains("Make changes:")) {
@@ -91,11 +94,11 @@ public class ViewImpl extends JFrame {
       try {
         cutoff = Integer.parseInt(cutoffTextField.getText());
       } catch (NumberFormatException nfe) {
-        cutoffLabel.setText("Please insert a valid number:");
-        cutoff = 0;
+        cutoffLabel.setText("Please enter a positive integer");
+        cutoff = -1;
       }
-      if (cutoff < 1) {
-        cutoffLabel.setText("Please insert a valid number:");
+      if (cutoff < 0) {
+        cutoffLabel.setText("Please enter a positive integer");
       }
     });
 
@@ -137,12 +140,12 @@ public class ViewImpl extends JFrame {
   }
 
   private void commitButtonAction() {
-    if (cutoff < 1 || directoryNameLabel
-        .getText().equals("Directory: none selected")) {
-      commitLabel.setText("Please ensure that all values are set");
-      commitLabel.setForeground(new Color(180, 70, 70));
-      this.setSize(mainPanel.getPreferredSize().width + 20,
-          mainPanel.getPreferredSize().height + 20);
+    if (cutoff == 0 && extensionTextField.getText().isEmpty()) {
+      errorMessage("Extension field cannot be empty when 'cutoff' is 0.");
+      return;
+    }
+    if (cutoff < 0 || directoryNameLabel.getText().equals("Directory: none selected")) {
+      errorMessage();
       return;
     }
     int num;
@@ -187,6 +190,18 @@ public class ViewImpl extends JFrame {
     }
     logSB.append("\n");
     logTextArea.setText(logSB.toString());
+  }
+
+
+  private void errorMessage() {
+    errorMessage("Please ensure that all values are set");
+  }
+
+  private void errorMessage(String msg) {
+    commitLabel.setText(msg);
+    commitLabel.setForeground(new Color(180, 70, 70));
+    this.setSize(mainPanel.getPreferredSize().width + 20,
+        this.getHeight());
   }
 
   /**
