@@ -71,7 +71,9 @@ public class ViewImpl extends JFrame {
    * Initializes the action listeners.
    */
   private void initializeActionListeners() {
-
+    keywordLabel.setToolTipText("The keyword that each file must contain to perform the change");
+    cutoffLabel.setToolTipText("The number of characters to remove from the end of each file");
+    extensionLabel.setToolTipText("Optional: Apply a new extension to all of the renamed files");
     selectDirectoryButton.addActionListener(e -> chooseDirectoryFileDialog());
     keywordTextField.addActionListener(e -> {
       if (!commitLabel.getText().contains("Make changes:")) {
@@ -116,7 +118,7 @@ public class ViewImpl extends JFrame {
         commitLabel.setForeground(Color.BLACK);
         commitLabel.setText("Make changes:");
       }
-      extensionLabel.setText("Extension: " + extensionTextField.getText());
+      extensionLabel.setText("Unified extension (opt.): " + extensionTextField.getText());
     });
     commitButton.addActionListener(e -> commitButtonAction());
 
@@ -144,16 +146,22 @@ public class ViewImpl extends JFrame {
       return;
     }
     int num;
-    if (extensionTextField.getText().isBlank()) {
+    boolean hasProvidedExtension = false;
+    if (!extensionTextField.getText().isEmpty()) {
       num = JOptionPane
-          .showConfirmDialog(this, "Are you sure you want to leave the extension field blank?");
+          .showConfirmDialog(this,
+              "<HTML><b>Are you sure you want to provide a universal extension?</b> \nThis will "
+                  + "make each file that matches the given keyword use this extension. \n\nLeaving "
+                  + "the extension field empty will maintain the original file extensions.");
       if (num != 0) {
         return;
+      } else {
+        hasProvidedExtension = true;
       }
     }
     m = new ModelImpl();
     m.performChange(directoryPathSelected, keywordTextField.getText(), cutoff,
-        extensionTextField.getText(), includeHiddenFiles);
+        extensionTextField.getText(), includeHiddenFiles, hasProvidedExtension);
     commitLabel.setForeground(Color.BLACK);
     if (m.wasErrorOnExit()) {
       commitLabel.setText("Made " + m.getNumberOfChanges() + " changes. (stopped due to error)");
@@ -198,7 +206,13 @@ public class ViewImpl extends JFrame {
     fileDialog.setVisible(true);
     if (fileDialog.getDirectory() != null) {
       this.directoryPathSelected = fileDialog.getDirectory().concat(fileDialog.getFile());
-      directoryNameLabel.setText("Directory: " + directoryPathSelected);
+      String displayDirectoryText = directoryPathSelected;
+      if (displayDirectoryText.length() > 76 && !(displayDirectoryText.length() < 80)) {
+        displayDirectoryText =
+            "..." + displayDirectoryText.substring(displayDirectoryText.length() - 76);
+        directoryNameLabel.setToolTipText(directoryPathSelected);
+      }
+      directoryNameLabel.setText("Directory: " + displayDirectoryText);
       updateDirectoryContentsInLog(includeHiddenFiles);
     } else {
       directoryNameLabel.setText("Directory: " + "none selected");

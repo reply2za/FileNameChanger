@@ -1,5 +1,6 @@
 import java.io.File;
 import java.util.ArrayList;
+import org.apache.commons.io.FilenameUtils;
 
 public class ModelImpl {
 
@@ -9,7 +10,6 @@ public class ModelImpl {
   private boolean isErrorOnExit;
   private boolean canUndo;
   private String directoryPathString;
-  private String extension;
 
   public ModelImpl() {
     newContents = new ArrayList<>();
@@ -18,25 +18,42 @@ public class ModelImpl {
   }
 
 
+  /**
+   * Performs the file change
+   *
+   * @param directoryPathString the path to the directory
+   * @param fileNameMustContain a string that all files must contain in order to make the change
+   * @param howMuchToCutoff     the amount of characters to remove from the end (does not include
+   *                            the file extension)
+   * @param newExtension        a common extension for all the files, make 'null' to keep file
+   *                            defaults
+   * @param includeHiddenFiles  whether to also check and change hidden "." files
+   */
   public void performChange(String directoryPathString, String fileNameMustContain,
-      int howMuchToCutoff, String extension, boolean includeHiddenFiles) {
+      int howMuchToCutoff, String newExtension, boolean includeHiddenFiles,
+      boolean extensionProvided) {
     isErrorOnExit = false;
     this.directoryPathString = directoryPathString;
-    this.extension = extension;
-    howMuchToCutoff += extension.length();
     File directoryPathFile = new File(directoryPathString);
     String[] directoryContents = directoryPathFile.list();
     if (directoryContents != null) {
       canUndo = true;
+      int totalFileCutoff;
       for (String nameOfExistingFile : directoryContents) {
-        File oldFile = new File(directoryPathString + "/" + nameOfExistingFile);
+        String oldFilePath = directoryPathString + "/" + nameOfExistingFile;
+        String existingFileExtension = "." + FilenameUtils.getExtension(nameOfExistingFile);
+        totalFileCutoff = existingFileExtension.length() + howMuchToCutoff;
+        if (!extensionProvided) {
+          newExtension = existingFileExtension;
+        }
+        File oldFile = new File(oldFilePath);
         // this if statement contains the code that makes the actual change w/ error avoidance
-        if (contentsClearedForChange(nameOfExistingFile, fileNameMustContain, howMuchToCutoff,
+        if (contentsClearedForChange(nameOfExistingFile, fileNameMustContain, totalFileCutoff,
             includeHiddenFiles)) {
           oldContents.add(nameOfExistingFile);
           String newFileEnding = nameOfExistingFile
-              .substring(0, nameOfExistingFile.length() - howMuchToCutoff)
-              .concat(extension);
+              .substring(0, nameOfExistingFile.length() - totalFileCutoff)
+              .concat(newExtension);
           File newFile = new File(directoryPathString + "/" + newFileEnding);
           if (newFile.exists()) {
             newContents.add("\nError: File name conflict. New file name already exists. "
@@ -119,7 +136,9 @@ public class ModelImpl {
           }
         }
       }
-      return outputLog.append("\n\nAttempted: Previously altered file names have been undone.")
+      canUndo = false;
+      return outputLog.append(
+          "\n\nAttempted: Each previously altered file name has been renamed to its original.")
           .toString();
     } else {
       return "Files could not be found. No changes made.";
