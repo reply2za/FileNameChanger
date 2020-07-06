@@ -34,8 +34,10 @@ public class ViewImpl extends JFrame {
   private JLabel commitLabel;
   private JButton logButton;
   private JCheckBox includeHiddenFilesCheckBox;
+  private JButton undoButton;
   private String directoryPathSelected;
   private boolean includeHiddenFiles;
+  private ModelImpl m;
 
   public ViewImpl() {
     super("Batch File Name Changer");
@@ -69,6 +71,7 @@ public class ViewImpl extends JFrame {
    * Initializes the action listeners.
    */
   private void initializeActionListeners() {
+
     selectDirectoryButton.addActionListener(e -> chooseDirectoryFileDialog());
     keywordTextField.addActionListener(e -> {
       if (!commitLabel.getText().contains("Make changes:")) {
@@ -101,7 +104,7 @@ public class ViewImpl extends JFrame {
       if (logTextArea.getSelectedText() != null) {
         commitLabel.setForeground(Color.BLACK);
         commitLabel.setText(
-            "Make changes: (" + Integer.toString(logTextArea.getSelectedText().length())
+            "Make changes: (" + logTextArea.getSelectedText().length()
                 + " highlighted)");
       }
       this.setSize(mainPanel.getPreferredSize().width + 20,
@@ -115,52 +118,7 @@ public class ViewImpl extends JFrame {
       }
       extensionLabel.setText("Extension: " + extensionTextField.getText());
     });
-    commitButton.addActionListener(e -> {
-      if (cutoff < 1 || directoryNameLabel
-          .getText().equals("Directory: none selected")) {
-        commitLabel.setText("Please ensure that all values are set");
-        commitLabel.setForeground(new Color(180, 70, 70));
-        this.setSize(mainPanel.getPreferredSize().width + 20,
-            mainPanel.getPreferredSize().height + 20);
-        return;
-      }
-      int num;
-      if (extensionTextField.getText().isBlank()) {
-        num = JOptionPane
-            .showConfirmDialog(this, "Are you sure you want to leave the extension field blank?");
-        if (num != 0) {
-          return;
-        }
-      }
-      ModelImpl m = new ModelImpl();
-      m.performChange(directoryPathSelected, keywordTextField.getText(), cutoff,
-          extensionTextField.getText(), includeHiddenFiles);
-      commitLabel.setForeground(Color.BLACK);
-      if (m.wasErrorOnExit()) {
-        commitLabel.setText("Made " + m.getNumberOfChanges() + " changes. (stopped due to error)");
-      } else {
-        commitLabel.setText("Made " + m.getNumberOfChanges() + " changes.");
-      }
-      StringBuilder logSB = new StringBuilder();
-      logSB.append("Original file names:\n");
-      int i = 0;
-      for (String s : m.oldContents) {
-        i++;
-        logSB.append(i).append(". ").append(s).append("\n");
-      }
-      logSB.append("\nNew file names:\n");
-      int j = 0;
-      for (String s : m.newContents) {
-        j++;
-        if (j == i && m.wasErrorOnExit()) {
-          logSB.append(j).append(". (Did not change file name)\n").append(s).append("\n");
-        } else {
-          logSB.append(j).append(". ").append(s).append("\n");
-        }
-      }
-      logSB.append("\n");
-      logTextArea.setText(logSB.toString());
-    });
+    commitButton.addActionListener(e -> commitButtonAction());
 
     includeHiddenFilesCheckBox.addActionListener(e -> {
       includeHiddenFiles = !includeHiddenFiles;
@@ -169,6 +127,58 @@ public class ViewImpl extends JFrame {
       }
     });
 
+    undoButton.addActionListener(e -> {
+      commitLabel.setText("Undo attempted.");
+      logTextArea.setText(m.UndoNameChange());
+    });
+
+  }
+
+  private void commitButtonAction() {
+    if (cutoff < 1 || directoryNameLabel
+        .getText().equals("Directory: none selected")) {
+      commitLabel.setText("Please ensure that all values are set");
+      commitLabel.setForeground(new Color(180, 70, 70));
+      this.setSize(mainPanel.getPreferredSize().width + 20,
+          mainPanel.getPreferredSize().height + 20);
+      return;
+    }
+    int num;
+    if (extensionTextField.getText().isBlank()) {
+      num = JOptionPane
+          .showConfirmDialog(this, "Are you sure you want to leave the extension field blank?");
+      if (num != 0) {
+        return;
+      }
+    }
+    m = new ModelImpl();
+    m.performChange(directoryPathSelected, keywordTextField.getText(), cutoff,
+        extensionTextField.getText(), includeHiddenFiles);
+    commitLabel.setForeground(Color.BLACK);
+    if (m.wasErrorOnExit()) {
+      commitLabel.setText("Made " + m.getNumberOfChanges() + " changes. (stopped due to error)");
+    } else {
+      commitLabel.setText("Made " + m.getNumberOfChanges() + " changes.");
+    }
+    StringBuilder logSB = new StringBuilder();
+    logSB.append("Original file names:\n");
+    int i = 0;
+    for (String s : m.oldContents) {
+      i++;
+      logSB.append(i).append(". ").append(s).append("\n");
+    }
+    logSB.append("\nNew file names:\n");
+    int j = 0;
+    for (String s : m.newContents) {
+      j++;
+      if (j == i && m.wasErrorOnExit()) {
+        logSB.append(j).append(". (Did not change file name)\n").append(s).append("\n");
+      } else {
+        logSB.append(j).append(". ").append(s).append("\n");
+      }
+    }
+    logSB.append("\n");
+    logTextArea.setText(logSB.toString());
   }
 
   /**
