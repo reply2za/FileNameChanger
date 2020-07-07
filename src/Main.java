@@ -8,7 +8,7 @@ public class Main {
   public static void main(String[] args) throws IOException {
     //BufferedImage myImg = ImageIO.read(Main.class.getResourceAsStream("fileRenamerIcon.png"));
     Main.setIcon(ImageIO.read(Main.class.getResourceAsStream("fileRenamerIcon.png")));
-    new ViewImpl();
+    new ViewImpl(exists());
   }
 
   private static boolean exists() {

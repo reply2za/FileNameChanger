@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -20,6 +21,7 @@ public class ViewImpl extends JFrame {
 
   private final JTextArea logTextArea;
   private final JScrollPane jScrollPane;
+  private final boolean isMacOS;
   private int cutoff;
   private JPanel mainPanel;
   private JButton commitButton;
@@ -39,10 +41,11 @@ public class ViewImpl extends JFrame {
   private boolean includeHiddenFiles;
   private ModelImpl m;
 
-  public ViewImpl() {
+  public ViewImpl(boolean b) {
     super("Batch File Name Changer");
     this.setDefaultCloseOperation(EXIT_ON_CLOSE);
     this.includeHiddenFiles = false;
+    this.isMacOS = b;
 
     JMenuItem closeMenuItem = new JMenuItem();
     closeMenuItem.addActionListener(e -> System.exit(0));
@@ -113,7 +116,7 @@ public class ViewImpl extends JFrame {
                 + " highlighted)");
       }
       this.setSize(mainPanel.getPreferredSize().width + 20,
-          mainPanel.getPreferredSize().height + 20);
+          this.getHeight());
     });
 
     extensionTextField.addActionListener(e -> {
@@ -224,6 +227,10 @@ public class ViewImpl extends JFrame {
    * The UI to choose a file.
    */
   public void chooseDirectoryFileDialog() {
+    if (!isMacOS) {
+      chooseDirectoryFileForNonMac();
+      return;
+    }
     commitLabel.setForeground(Color.BLACK);
     commitLabel.setText("Make changes:");
     FileDialog fileDialog = new FileDialog(new Dialog(this), "Select directory");
@@ -232,11 +239,36 @@ public class ViewImpl extends JFrame {
     try {
       System.setProperty("apple.awt.fileDialogForDirectories", "true");
     } catch (Exception e) {
-      fileDialog.setTitle("Select a directory only - NOT A FILE");
+      // intentionally left blank
     }
     fileDialog.setVisible(true);
     if (fileDialog.getDirectory() != null) {
       this.directoryPathSelected = fileDialog.getDirectory().concat(fileDialog.getFile());
+      String displayDirectoryText = directoryPathSelected;
+      if (displayDirectoryText.length() > 76 && !(displayDirectoryText.length() < 80)) {
+        displayDirectoryText =
+            "..." + displayDirectoryText.substring(displayDirectoryText.length() - 76);
+        directoryNameLabel.setToolTipText(directoryPathSelected);
+      }
+      directoryNameLabel.setText("Directory: " + displayDirectoryText);
+      updateDirectoryContentsInLog(includeHiddenFiles);
+    } else {
+      directoryNameLabel.setText("Directory: " + "none selected");
+    }
+    this.setSize(this.getPreferredSize().width + 20, this.getPreferredSize().height + 20);
+
+  }
+
+  /**
+   * A UI to choose files for non macos based systems.
+   */
+  private void chooseDirectoryFileForNonMac() {
+    commitLabel.setForeground(Color.BLACK);
+    commitLabel.setText("Make changes:");
+    JFileChooser fileDialog = new JFileChooser("Select directory");
+    fileDialog.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+    if (fileDialog.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+      this.directoryPathSelected = fileDialog.getSelectedFile().toString();
       String displayDirectoryText = directoryPathSelected;
       if (displayDirectoryText.length() > 76 && !(displayDirectoryText.length() < 80)) {
         displayDirectoryText =
