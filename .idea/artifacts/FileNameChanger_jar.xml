@@ -3,6 +3,7 @@
     <output-path>$PROJECT_DIR$/out/artifacts/FileNameChanger_jar</output-path>
     <root id="archive" name="FileNameChanger.jar">
       <element id="module-output" name="FileNameChanger" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../JavaJars/commons-io-2.7.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

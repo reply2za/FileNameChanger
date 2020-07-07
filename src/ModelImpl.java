@@ -41,7 +41,10 @@ public class ModelImpl {
       int totalFileCutoff;
       for (String nameOfExistingFile : directoryContents) {
         String oldFilePath = directoryPathString + "/" + nameOfExistingFile;
-        String existingFileExtension = "." + FilenameUtils.getExtension(nameOfExistingFile);
+        String existingFileExtension = "";
+        if (!FilenameUtils.getExtension(nameOfExistingFile).isBlank()) {
+          existingFileExtension = "." + FilenameUtils.getExtension(nameOfExistingFile);
+        }
         totalFileCutoff = existingFileExtension.length() + howMuchToCutoff;
         if (!extensionProvided) {
           newExtension = existingFileExtension;
@@ -129,8 +132,8 @@ public class ModelImpl {
               outputLog.append("Failed name change: ").append(nameOfExistingFile).append("\n");
             } else {
               numberOfChanges++;
-              outputLog.append(nameOfExistingFile).append(" -> ")
-                  .append(newFileName).append("\n");
+              outputLog.append(nameOfExistingFile).append("\n->\n")
+                  .append(newFileName).append("\n-------\n");
             }
             i++;
           }

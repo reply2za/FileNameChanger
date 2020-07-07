@@ -48,7 +48,7 @@ public class ViewImpl extends JFrame {
     closeMenuItem.addActionListener(e -> System.exit(0));
     closeMenuItem.setAccelerator(KeyStroke
         .getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-    logTextArea = new JTextArea(20, 25);
+    logTextArea = new JTextArea(23, 25);
 
     jScrollPane = new JScrollPane(logTextArea);
 
@@ -139,6 +139,9 @@ public class ViewImpl extends JFrame {
 
   }
 
+  /**
+   * The action for when the 'make changes' button is pressed.
+   */
   private void commitButtonAction() {
     if (cutoff == 0 && extensionTextField.getText().isEmpty()) {
       errorMessage("Extension field cannot be empty when 'cutoff' is 0.");
@@ -172,21 +175,34 @@ public class ViewImpl extends JFrame {
       commitLabel.setText("Made " + m.getNumberOfChanges() + " changes.");
     }
     StringBuilder logSB = new StringBuilder();
-    logSB.append("Original file names:\n");
-    int i = 0;
-    for (String s : m.oldContents) {
-      i++;
-      logSB.append(i).append(". ").append(s).append("\n");
-    }
-    logSB.append("\nNew file names:\n");
-    int j = 0;
-    for (String s : m.newContents) {
-      j++;
-      if (j == i && m.wasErrorOnExit()) {
-        logSB.append(j).append(". (Did not change file name)\n").append(s).append("\n");
-      } else {
-        logSB.append(j).append(". ").append(s).append("\n");
+    if (m.oldContents.size() > 0) {
+      logSB.append("Original file names:\n");
+      int i = 0;
+      for (String s : m.oldContents) {
+        i++;
+        logSB.append(i).append(". ").append(s).append("\n");
       }
+      logSB.append("\nNew file names:\n");
+      int j = 0;
+      for (String s : m.newContents) {
+        j++;
+        if (j == i && m.wasErrorOnExit()) {
+          logSB.append(j).append(". (Did not change file name)\n").append(s).append("\n");
+        } else {
+          logSB.append(j).append(". ").append(s).append("\n");
+        }
+      }
+    } else {
+      logSB.append(
+          "No changes made.\n----------------------"
+              + "\nIf you were expecting changes to be made, please ensure that the "
+              + "typed parameters are accurate.\n\nTroubleshooting tips:\n----------------------"
+              + "\nMake sure to press 'enter' to submit any typed value into the program "
+              + "(must be done for every text field).\n\nKeyword section:"
+              + "\n-Keyword is case-sensitive."
+              + "\n-There should be no unintentional spaces before or after the word when "
+              + "typing into the program.\n\nCutoff section:\n-Cutoff value must be less than the "
+              + "name of the file (not including its extension)");
     }
     logSB.append("\n");
     logTextArea.setText(logSB.toString());
