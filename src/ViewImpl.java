@@ -3,9 +3,11 @@ import java.awt.Dialog;
 import java.awt.FileDialog;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -37,12 +39,16 @@ public class ViewImpl extends JFrame {
   private JButton logButton;
   private JCheckBox includeHiddenFilesCheckBox;
   private JButton undoButton;
+  private JComboBox modeComboBox;
   private String directoryPathSelected;
   private boolean includeHiddenFiles;
   private ModelImpl m;
+  private int modeType;
+  private String keyWordString;
 
   public ViewImpl(boolean b) {
-    super("Batch File Name Changer");
+    super();
+    this.setTitle("File Name Changer - Remove File Ending Mode");
     this.setDefaultCloseOperation(EXIT_ON_CLOSE);
     this.includeHiddenFiles = false;
     this.isMacOS = b;
@@ -53,6 +59,8 @@ public class ViewImpl extends JFrame {
         .getKeyStroke(KeyEvent.VK_W, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
     logTextArea = new JTextArea(23, 25);
 
+    cutoff = -1;
+    modeType = 0;
     jScrollPane = new JScrollPane(logTextArea);
 
     logTextArea.setText("Select a directory to show contents here:");
@@ -60,6 +68,7 @@ public class ViewImpl extends JFrame {
     logTextArea.setLineWrap(true);
     logTextArea.setWrapStyleWord(true);
 
+    keyWordString = keywordLabel.getText() + " ";
     initializeActionListeners();
 
     this.add(closeMenuItem);
@@ -81,27 +90,42 @@ public class ViewImpl extends JFrame {
     extensionLabel.setToolTipText(
         "Optional unless cutoff is 0: Apply a new extension to all of the renamed files");
     selectDirectoryButton.addActionListener(e -> chooseDirectoryFileDialog());
-    keywordTextField.addActionListener(e -> {
-      if (!commitLabel.getText().contains("Make changes:")) {
-        commitLabel.setForeground(Color.BLACK);
-        commitLabel.setText("Make changes:");
+    keywordTextField.addKeyListener(new KeyListener() {
+      @Override
+      public void keyTyped(KeyEvent e) {
+        if (!commitLabel.getText().contains("Make changes:")) {
+          commitLabel.setForeground(Color.BLACK);
+          commitLabel.setText("Make changes:");
+        }
+        keywordLabel.setText(keyWordString + keywordTextField.getText() + e.getKeyChar());
       }
-      keywordLabel.setText("Keyword: " + keywordTextField.getText());
+
+      @Override
+      public void keyPressed(KeyEvent e) {
+
+      }
+
+      @Override
+      public void keyReleased(KeyEvent e) {
+
+      }
     });
-    cutoffTextField.addActionListener(e -> {
-      if (!commitLabel.getText().contains("Make changes:")) {
-        commitLabel.setForeground(Color.BLACK);
-        commitLabel.setText("Make changes:");
+
+    cutoffTextField.addKeyListener(new KeyListener() {
+      @Override
+      public void keyTyped(KeyEvent e) {
+        String newString = cutoffTextField.getText() + e.getKeyChar();
+        cutoffAction(newString);
       }
-      cutoffLabel.setText("Cutoff (int): " + cutoffTextField.getText());
-      try {
-        cutoff = Integer.parseInt(cutoffTextField.getText());
-      } catch (NumberFormatException nfe) {
-        cutoffLabel.setText("Please enter a positive integer");
-        cutoff = -1;
+
+      @Override
+      public void keyPressed(KeyEvent e) {
+        // intentionally left blank
       }
-      if (cutoff < 0) {
-        cutoffLabel.setText("Please enter a positive integer");
+
+      @Override
+      public void keyReleased(KeyEvent e) {
+        // intentionally left blank
       }
     });
 
@@ -140,43 +164,113 @@ public class ViewImpl extends JFrame {
       logTextArea.setText(m.UndoNameChange());
     });
 
+    modeComboBox.addActionListener(e -> {
+      modeType = modeComboBox.getSelectedIndex();
+      if (modeType == 0) {
+        this.setTitle("File Name Changer - Remove File Ending Mode");
+        cutoffAction(cutoffTextField.getText());
+      } else {
+        this.setTitle("File Name Changer - Batch File Rename Mode");
+        cutoffAction(cutoffTextField.getText());
+      }
+    });
+
+  }
+
+  private void resizeMainFrame() {
+    this.setSize(mainPanel.getPreferredSize().width + 20,
+        this.getHeight());
+  }
+
+  /**
+   * What to do when the cutoff values are changed
+   * @param ending the ending to the label
+   */
+  private void cutoffAction(String ending) {
+    if (!commitLabel.getText().contains("Make changes:")) {
+      commitLabel.setForeground(Color.BLACK);
+      commitLabel.setText("Make changes:");
+    }
+    if (modeType == 0) {
+      cutoffLabel.setToolTipText(
+          "The number of characters to remove from the end of each file, does not include "
+              + "extension");
+      if (cutoffTextField.getText().isBlank()) {
+        cutoffLabel.setText("Cutoff amount: ");
+      } else {
+        try {
+          cutoff = Integer.parseInt(cutoffTextField.getText());
+        } catch (NumberFormatException nfe) {
+          cutoffLabel.setText("Enter a positive integer");
+          cutoff = -1;
+        }
+        if (cutoff < 0) {
+          cutoffLabel.setText("Enter a positive integer");
+        }
+      }
+    } else {
+      cutoffLabel.setToolTipText(
+          "The name of the new files followed by a number. The files will be sorted "
+              + "alphabetically.");
+      if (ending.length() > 60){
+        cutoffLabel.setText("Rename to: " + ending.substring(ending.length() - 60));
+      } else if (ending.length() > 20){
+        resizeMainFrame();
+        cutoffLabel.setText("Rename to: " + ending);
+      } else {
+        cutoffLabel.setText("Rename to: " + ending);
+      }
+    }
   }
 
   /**
    * The action for when the 'make changes' button is pressed.
    */
   private void commitButtonAction() {
-    if (cutoff == 0 && extensionTextField.getText().isEmpty()) {
-      errorMessage("Extension field cannot be empty when 'cutoff' is 0.");
-      return;
+    if (modeType == 0) {
+      if (cutoff == 0 && extensionTextField.getText().isEmpty()) {
+        errorMessage("Extension field cannot be empty when 'cutoff' is 0.");
+        return;
+      }
+      if (cutoff < 0 || directoryNameLabel.getText().equals("Directory: none selected")) {
+        errorMessage();
+        return;
+      }
+    } else if (cutoffTextField.getText().isBlank()) {
+      errorMessage("Must provide a new file name.");
     }
-    if (cutoff < 0 || directoryNameLabel.getText().equals("Directory: none selected")) {
-      errorMessage();
-      return;
-    }
-    int num;
+    int jOPInt;
     boolean hasProvidedExtension = false;
     if (!extensionTextField.getText().isEmpty()) {
-      num = JOptionPane
+      jOPInt = JOptionPane
           .showConfirmDialog(this,
               "<HTML><b>Are you sure you want to provide a universal extension?</b> \nThis will "
                   + "make each file that matches the given keyword use this extension. \n\nLeaving "
                   + "the extension field empty will maintain the original file extensions.");
-      if (num != 0) {
+      if (jOPInt != 0) {
         return;
       } else {
         hasProvidedExtension = true;
       }
     }
     m = new ModelImpl();
-    m.performChange(directoryPathSelected, keywordTextField.getText(), cutoff,
-        extensionTextField.getText(), includeHiddenFiles, hasProvidedExtension);
+    if (modeType == 0) {
+      m.performChange(directoryPathSelected, keywordTextField.getText(), cutoff,
+          extensionTextField.getText(), includeHiddenFiles, hasProvidedExtension);
+    } else {
+      m.performBatchRename(directoryPathSelected, keywordTextField.getText(),
+          cutoffTextField.getText(), extensionTextField.getText(), includeHiddenFiles,
+          hasProvidedExtension);
+    }
     commitLabel.setForeground(Color.BLACK);
+
+    // main info label after changes have been made
     if (m.wasErrorOnExit()) {
       commitLabel.setText("Made " + m.getNumberOfChanges() + " changes. (stopped due to error)");
     } else {
       commitLabel.setText("Made " + m.getNumberOfChanges() + " changes.");
     }
+    // applying information to the new log
     StringBuilder logSB = new StringBuilder();
     if (m.oldContents.size() > 0) {
       logSB.append("Original file names:\n");

@@ -1,5 +1,6 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.apache.commons.io.FilenameUtils;
 
 public class ModelImpl {
@@ -72,6 +73,75 @@ public class ModelImpl {
           } else {
             numberOfChanges++;
             newContents.add(newFileEnding);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Performs the file change
+   *
+   * @param directoryPathString         the path to the directory
+   * @param fileNameMustContain         a string that all files must contain in order to make the
+   *                                    change
+   * @param newFileNameWithoutExtension the name of the new file without it's "." extension, all
+   *                                    subsequent files will be the same name with a number
+   *                                    attached to it
+   * @param newExtension                a common extension for all the files, make 'null' to keep
+   *                                    file defaults
+   * @param includeHiddenFiles          whether to also check and change hidden "." files
+   */
+  public void performBatchRename(String directoryPathString, String fileNameMustContain,
+      String newFileNameWithoutExtension, String newExtension, boolean includeHiddenFiles,
+      boolean extensionProvided) {
+    isErrorOnExit = false;
+    this.directoryPathString = directoryPathString;
+    File directoryPathFile = new File(directoryPathString);
+    String[] directoryContents = directoryPathFile.list();
+    if (directoryContents != null) {
+      ArrayList<String> directoryContentsAL = new ArrayList<String>(
+          Arrays.asList(directoryContents));
+      // sorts the directory contents
+      java.util.Collections.sort(directoryContentsAL);
+      canUndo = true;
+      int totalFileCutoff;
+      // apply to each file
+      int numberAtTheEndOfFile = 1;
+      for (String nameOfExistingFile : directoryContentsAL) {
+        String oldFilePath = directoryPathString + "/" + nameOfExistingFile;
+        String existingFileExtension = "";
+        // put the extension in the variable existingFileExtension
+        if (!FilenameUtils.getExtension(nameOfExistingFile).isBlank()) {
+          existingFileExtension = "." + FilenameUtils.getExtension(nameOfExistingFile);
+        }
+        // if no new extension was provided then makes the existing file extension the new one
+        if (!extensionProvided) {
+          newExtension = existingFileExtension;
+        }
+        totalFileCutoff = existingFileExtension.length();
+        File oldFile = new File(oldFilePath);
+        // this if statement contains the code that makes the actual change w/ error avoidance
+        if (contentsClearedForChange(nameOfExistingFile, fileNameMustContain, totalFileCutoff,
+            includeHiddenFiles)) {
+          oldContents.add(nameOfExistingFile);
+          String newFileNameWithExtension = newFileNameWithoutExtension.concat("-")
+              .concat(String.valueOf(numberAtTheEndOfFile)).concat(newExtension);
+          File newFile = new File(directoryPathString + "/" + newFileNameWithExtension);
+          numberAtTheEndOfFile++;
+          while (newFile.exists()) {
+            newFileNameWithExtension = newFileNameWithoutExtension.concat("-")
+                .concat(String.valueOf(numberAtTheEndOfFile)).concat(newExtension);
+            newFile = new File(directoryPathString + "/" + newFileNameWithExtension);
+            numberAtTheEndOfFile++;
+          }
+          // attempting the rename
+          boolean success = oldFile.renameTo(newFile);
+          if (!success) {
+            newContents.add("Failed name change: " + nameOfExistingFile);
+          } else {
+            numberOfChanges++;
+            newContents.add(newFileNameWithExtension);
           }
         }
       }
