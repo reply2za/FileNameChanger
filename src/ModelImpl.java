@@ -130,7 +130,7 @@ public class ModelImpl {
           File newFile = new File(directoryPathString + "/" + newFileNameWithExtension);
           numberAtTheEndOfFile++;
           while (newFile.exists()) {
-            newFileNameWithExtension = newFileNameWithoutExtension.concat("-")
+            newFileNameWithExtension = newFileNameWithoutExtension
                 .concat(String.valueOf(numberAtTheEndOfFile)).concat(newExtension);
             newFile = new File(directoryPathString + "/" + newFileNameWithExtension);
             numberAtTheEndOfFile++;

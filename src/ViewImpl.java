@@ -322,7 +322,7 @@ public class ViewImpl extends JFrame {
 
 
   /**
-   * A standard error message for when there is a problem
+   * A standard error message for when there is a problem.
    */
   private void errorMessage() {
     errorMessage("Please ensure that all values are set");
@@ -341,15 +341,15 @@ public class ViewImpl extends JFrame {
   }
 
   /**
-   * The UI to choose a file.
+   * The UI to choose a directory.
    */
   public void chooseDirectoryFileDialog() {
+    commitLabel.setForeground(Color.BLACK);
+    commitLabel.setText("Make changes:");
     if (!isMacOS) {
       chooseDirectoryFileForNonMac();
       return;
     }
-    commitLabel.setForeground(Color.BLACK);
-    commitLabel.setText("Make changes:");
     FileDialog fileDialog = new FileDialog(new Dialog(this), "Select directory");
     fileDialog.setMode(FileDialog.LOAD);
     fileDialog.setMultipleMode(false);
@@ -377,11 +377,10 @@ public class ViewImpl extends JFrame {
   }
 
   /**
-   * A UI to choose files for non macos based systems.
+   * A UI to choose files for non-macOS based systems. Helper function for
+   * 'chooseDirectoryFileDialog'.
    */
   private void chooseDirectoryFileForNonMac() {
-    commitLabel.setForeground(Color.BLACK);
-    commitLabel.setText("Make changes:");
     JFileChooser fileDialog = new JFileChooser("Select directory");
     fileDialog.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
     if (fileDialog.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
