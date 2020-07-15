@@ -100,7 +100,7 @@ public class ModelImpl {
     File directoryPathFile = new File(directoryPathString);
     String[] directoryContents = directoryPathFile.list();
     if (directoryContents != null) {
-      ArrayList<String> directoryContentsAL = new ArrayList<String>(
+      ArrayList<String> directoryContentsAL = new ArrayList<>(
           Arrays.asList(directoryContents));
       // sorts the directory contents
       java.util.Collections.sort(directoryContentsAL);
@@ -125,7 +125,7 @@ public class ModelImpl {
         if (contentsClearedForChange(nameOfExistingFile, fileNameMustContain, totalFileCutoff,
             includeHiddenFiles)) {
           oldContents.add(nameOfExistingFile);
-          String newFileNameWithExtension = newFileNameWithoutExtension.concat("-")
+          String newFileNameWithExtension = newFileNameWithoutExtension
               .concat(String.valueOf(numberAtTheEndOfFile)).concat(newExtension);
           File newFile = new File(directoryPathString + "/" + newFileNameWithExtension);
           numberAtTheEndOfFile++;
