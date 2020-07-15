@@ -114,7 +114,12 @@ public class ViewImpl extends JFrame {
     cutoffTextField.addKeyListener(new KeyListener() {
       @Override
       public void keyTyped(KeyEvent e) {
-        String newString = cutoffTextField.getText() + e.getKeyChar();
+        String newString;
+        if (e.getKeyChar() == '\b') {
+          newString = cutoffTextField.getText();
+        } else {
+          newString = cutoffTextField.getText() + e.getKeyChar();
+        }
         cutoffAction(newString);
       }
 
@@ -166,6 +171,7 @@ public class ViewImpl extends JFrame {
 
     modeComboBox.addActionListener(e -> {
       modeType = modeComboBox.getSelectedIndex();
+      cutoffLabel.setForeground(Color.BLACK);
       if (modeType == 0) {
         this.setTitle("File Name Changer - Remove File Ending Mode");
         cutoffAction(cutoffTextField.getText());
@@ -184,6 +190,7 @@ public class ViewImpl extends JFrame {
 
   /**
    * What to do when the cutoff values are changed
+   *
    * @param ending the ending to the label
    */
   private void cutoffAction(String ending) {
@@ -195,26 +202,30 @@ public class ViewImpl extends JFrame {
       cutoffLabel.setToolTipText(
           "The number of characters to remove from the end of each file, does not include "
               + "extension");
-      if (cutoffTextField.getText().isBlank()) {
+      if (ending.isBlank()) {
+        cutoffLabel.setForeground(Color.BLACK);
         cutoffLabel.setText("Cutoff amount: ");
       } else {
         try {
-          cutoff = Integer.parseInt(cutoffTextField.getText());
+          cutoff = Integer.parseInt(ending);
         } catch (NumberFormatException nfe) {
-          cutoffLabel.setText("Enter a positive integer");
           cutoff = -1;
         }
         if (cutoff < 0) {
-          cutoffLabel.setText("Enter a positive integer");
+          cutoffLabel.setForeground(new Color(180, 70, 70));
+          cutoffLabel.setText("Must be a positive integer");
+        } else {
+          cutoffLabel.setForeground(Color.BLACK);
+          cutoffLabel.setText("Cutoff amount: " + ending);
         }
       }
     } else {
       cutoffLabel.setToolTipText(
           "The name of the new files followed by a number. The files will be sorted "
               + "alphabetically.");
-      if (ending.length() > 60){
+      if (ending.length() > 60) {
         cutoffLabel.setText("Rename to: " + ending.substring(ending.length() - 60));
-      } else if (ending.length() > 20){
+      } else if (ending.length() > 20) {
         resizeMainFrame();
         cutoffLabel.setText("Rename to: " + ending);
       } else {
@@ -232,8 +243,12 @@ public class ViewImpl extends JFrame {
         errorMessage("Extension field cannot be empty when 'cutoff' is 0.");
         return;
       }
-      if (cutoff < 0 || directoryNameLabel.getText().equals("Directory: none selected")) {
-        errorMessage();
+      if (cutoff < 0) {
+        errorMessage("Must provide a valid cutoff amount.");
+        return;
+      }
+      if (directoryNameLabel.getText().equals("Directory: none selected")) {
+        errorMessage("No directory selected.");
         return;
       }
     } else if (cutoffTextField.getText().isBlank()) {
@@ -306,10 +321,18 @@ public class ViewImpl extends JFrame {
   }
 
 
+  /**
+   * A standard error message for when there is a problem
+   */
   private void errorMessage() {
     errorMessage("Please ensure that all values are set");
   }
 
+  /**
+   * A custom error message for when there is a problem.
+   *
+   * @param msg the error message to be displayed
+   */
   private void errorMessage(String msg) {
     commitLabel.setText(msg);
     commitLabel.setForeground(new Color(180, 70, 70));
